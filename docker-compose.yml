@@ -1,0 +1,71 @@
+version: "3.3"
+
+services:
+  survival:
+    image: minecraft-paper-server:1.19
+    container_name: mcserver-survival
+    environment:
+      MEMORYSIZE: 4G
+    depends_on:
+      - mariadb
+    build:
+      context: ./scripts/paper
+    volumes:
+      - ./data/survival:/data:rw
+    ports:
+      - "25565"
+      - "8123"
+    stdin_open: true
+    tty: true
+  creative:
+    image: minecraft-paper-server:1.19
+    container_name: mcserver-creative
+    environment:
+      MEMORYSIZE: 4G
+    depends_on:
+      - mariadb
+    build:
+      context: ./scripts/paper
+    volumes:
+      - ./data/creative:/data:rw
+    ports:
+      - "25565"
+      - "8123"
+    stdin_open: true
+    tty: true
+  proxy:
+    image: minecraft-velocity-server:3.1.2-SNAPSHOT
+    container_name: mcserver-proxy
+    environment:
+      MEMORYSIZE: 1G
+    depends_on:
+      - mariadb
+    build:
+      context: ./scripts/velocity
+    volumes:
+      - ./data/proxy:/data:rw
+    ports:
+      - "25565:25565"
+    stdin_open: true
+    tty: true
+  mariadb:
+    image: mariadb:10.6
+    container_name: mcserver-mariadb
+    ports:
+      - "3306"
+    volumes:
+      - ./data/mariadb:/var/lib/mysql:rw
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    stdin_open: true
+    tty: true
+  nginx:
+    image: nginx:alpine
+    container_name: mcserver-nginx
+    depends_on:
+      - "creative"
+      - "survival"
+    ports:
+      - "8123:80"
+    volumes:
+      - ./data/nginx:/etc/nginx:rw
